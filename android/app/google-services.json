@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "411705345064",
+    "firebase_url": "https://akash-7094f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "akash-7094f",
+    "storage_bucket": "akash-7094f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:411705345064:android:450bfe05f4e8f68418e11d",
+        "android_client_info": {
+          "package_name": "com.akash.test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvcu0-Jl-kyJZ5NOzHHibkwvgtFRJKQrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:411705345064:android:1d660ed78a669b0818e11d",
+        "android_client_info": {
+          "package_name": "com.example.chatbot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvcu0-Jl-kyJZ5NOzHHibkwvgtFRJKQrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
