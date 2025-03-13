@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:chatbot/TimerScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Focusscreen extends StatefulWidget {
   const Focusscreen({super.key});
@@ -9,160 +11,168 @@ class Focusscreen extends StatefulWidget {
 }
 
 class _FocusscreenState extends State<Focusscreen> {
-  // Original Figma dimensions
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final double itemWidth = 176.43;
   final double largeHeight = 210;
   final double smallHeight = 167;
+  bool _isLoading = true;
+  String _errorMessage = '';
+
+  // Firestore collection name
+  final String _topicsCollection = 'meditation_topics';
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What Brings you',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'to Silent Moon?',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                ),
-              ),
-            ],
-          ),
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final screenWidth = constraints.maxWidth;
-            final spacing = 16.0;
-            
-            // Calculate scale factor while maintaining original aspect ratios
-            final scale = screenWidth < 400 ? (screenWidth - spacing * 3) / (itemWidth * 2) : 1.0;
+  void initState() {
+    super.initState();
+    _checkUserPreferences();
+  }
 
-            return Padding(
-              padding: EdgeInsets.all(spacing),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'choose a topic to focus on:',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
-                    ),
-                    SizedBox(height: spacing),
-                    _buildResponsiveGrid(scale, spacing, context),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+  Future<void> _checkUserPreferences() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final doc = await _firestore.collection('user_preferences').doc(user.uid).get();
+        if (doc.exists && doc.data()?['last_selected_topic'] != null) {
+          // Navigate directly if preference exists
+          _navigateToTimer(doc.data()!['last_selected_topic']);
+        }
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Error loading preferences');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveUserPreference(String topic) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('user_preferences').doc(user.uid).set({
+          'last_selected_topic': topic,
+          'updated_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      print('Error saving preference: $e');
+    }
+  }
+
+  void _navigateToTimer(String topic) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Timerscreen(selectedTopic: topic),
       ),
     );
   }
 
-  Widget _buildResponsiveGrid(double scale, double spacing, BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'What Brings you',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'to Silent Moon?',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage))
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = constraints.maxWidth;
+                    final spacing = 16.0;
+                    final scale = screenWidth < 400 ? (screenWidth - spacing * 3) / (itemWidth * 2) : 1.0;
+
+                    return Padding(
+                      padding: EdgeInsets.all(spacing),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: _firestore.collection(_topicsCollection).snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+                          if (!snapshot.hasData) return CircularProgressIndicator();
+
+                          final topics = snapshot.data!.docs;
+                          return SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'choose a topic to focus on:',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: spacing),
+                                _buildTopicsGrid(topics, scale, spacing),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+
+  Widget _buildTopicsGrid(List<QueryDocumentSnapshot> topics, double scale, double spacing) {
     return Column(
       children: [
-        _buildResponsiveRow(
-          firstImage: 'assets/images/1.png',
-          secondImage: 'assets/images/2.png',
-          firstHeight: largeHeight,
-          secondHeight: smallHeight,
-          scale: scale,
-          spacing: spacing,
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Timerscreen())),
-        ),
-        SizedBox(height: spacing),
-        _buildResponsiveRow(
-          firstImage: 'assets/images/3.png',
-          secondImage: 'assets/images/4.png',
-          firstHeight: smallHeight,
-          secondHeight: largeHeight,
-          scale: scale,
-          spacing: spacing,
-        ),
-        SizedBox(height: spacing),
-        _buildResponsiveRow(
-          firstImage: 'assets/images/5.png',
-          secondImage: 'assets/images/6.png',
-          firstHeight: largeHeight,
-          secondHeight: smallHeight,
-          scale: scale,
-          spacing: spacing,
-        ),
-        SizedBox(height: spacing),
-        _buildResponsiveRow(
-          firstImage: 'assets/images/7.png',
-          secondImage: 'assets/images/8.png',
-          firstHeight: largeHeight,
-          secondHeight: largeHeight,
-          scale: scale,
-          spacing: spacing,
-        ),
+        for (int i = 0; i < topics.length; i += 2)
+          Padding(
+            padding: EdgeInsets.only(bottom: spacing),
+            child: Row(
+              children: [
+                _buildTopicItem(topics[i], scale, spacing),
+                if (i + 1 < topics.length) _buildTopicItem(topics[i + 1], scale, spacing),
+              ],
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildResponsiveRow({
-    required String firstImage,
-    required String secondImage,
-    required double firstHeight,
-    required double secondHeight,
-    required double scale,
-    required double spacing,
-    VoidCallback? onTap,
-  }) {
-    return Row(
-      children: [
-        _buildGridItem(
-          imagePath: firstImage,
-          width: itemWidth * scale,
-          height: firstHeight * scale,
-          onTap: onTap,
-        ),
-        SizedBox(width: spacing),
-        _buildGridItem(
-          imagePath: secondImage,
-          width: itemWidth * scale,
-          height: secondHeight * scale,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGridItem({
-    required String imagePath,
-    required double width,
-    required double height,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          image: DecorationImage(
-            image: AssetImage(imagePath),
-            fit: BoxFit.cover,
+  Widget _buildTopicItem(QueryDocumentSnapshot topic, double scale, double spacing) {
+    final data = topic.data() as Map<String, dynamic>;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _saveUserPreference(data['title']);
+          _navigateToTimer(data['title']);
+        },
+        child: Container(
+          margin: EdgeInsets.only(right: spacing),
+          height: (data['isLarge'] ?? false) ? largeHeight * scale : smallHeight * scale,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            image: DecorationImage(
+              image: NetworkImage(data['image_url']),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),

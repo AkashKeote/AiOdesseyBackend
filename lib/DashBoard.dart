@@ -1,20 +1,31 @@
 import 'package:chatbot/HappyMorningScreen.dart';
-import 'package:chatbot/LoginScreen.dart';
 import 'package:chatbot/MeditateDashBoard.dart';
 import 'package:chatbot/SongScreen.dart';
-import 'package:chatbot/utils/utils.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class Dashboard extends StatelessWidget {
-  Dashboard({super.key});
- final FirebaseAuth _auth = FirebaseAuth.instance;
+  const Dashboard({super.key});
+  String _formatTimestamp(Timestamp timestamp) {
+    return DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate());
+  }
+  String _getGreeting(int hour) {
+  if (hour < 12) {
+    return 'Morning';
+  } else if (hour < 17) {
+    return 'Afternoon';
+  } else if (hour < 21) {
+    return 'Evening';
+  } else {
+    return 'Night';
+  }
+}
   @override
   Widget build(BuildContext context) {
-   
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -50,14 +61,49 @@ class Dashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good Morning, Akash',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'We Wish you have a good day',
-                style: TextStyle(color: Colors.grey),
-              ),
+              
+ StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('messages')
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .snapshots(),
+  builder: (context, snapshot) {
+    // एरर और लोडिंग स्टेट
+    if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+    if (!snapshot.hasData) return CircularProgressIndicator();
+
+    // डेटा निकालें
+    final latestDoc = snapshot.data!.docs.first;
+    final message = latestDoc['message'];
+    final sender = latestDoc['sender'] ?? 'User';
+final dayType = latestDoc['daytype'] as String?; 
+
+    // समय के आधार पर ग्रीटिंग (अगर daytype फ़ील्ड न हो)
+    final timestamp = latestDoc['timestamp'] as Timestamp?;
+    final hour = timestamp?.toDate().hour ?? DateTime.now().hour;
+    String automaticGreeting = _getGreeting(hour);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          // daytype फ़ील्ड प्राथमिकता दें, नहीं तो ऑटोमैटिक
+           'Good ${dayType ?? automaticGreeting}, $sender',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          message,
+          style: TextStyle(color: Colors.grey),
+        ),
+      ],
+    );
+  },
+),
+
+// समय के अनुसार ग्रीटिंग डिटेक्ट करने की फंक्शन
+// यह फंक्शन क्लास के अंदर बनाएं (build मेथड के बाहर)
+
               SizedBox(height: 20),
              LayoutBuilder(
   builder: (context, constraints) {
@@ -382,16 +428,7 @@ class Dashboard extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.person),
               color: Colors.grey,
-              onPressed: (){
-
-                _auth.signOut().then((value) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
-                }).onError((error, stackTrace) {
-                  Utils().toastmessage(
-                    error.toString()
-                  );
-                },);
-              },
+              onPressed: () {},
             ),
           ],
         ),

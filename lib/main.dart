@@ -1,15 +1,16 @@
 import 'package:chatbot/LoginScreen.dart';
 import 'package:chatbot/SignUpScreen.dart';
+import 'package:chatbot/SplashScreen/SplashScreen.dart';
 import 'package:chatbot/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
- WidgetsFlutterBinding.ensureInitialized();
- await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
- );
-  runApp(SilentMoonApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const SilentMoonApp());
 }
 
 class SilentMoonApp extends StatelessWidget {
@@ -19,7 +20,7 @@ class SilentMoonApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SilentMoonScreen(),
+      home: SplashScreen(),
     );
   }
 }
@@ -102,7 +103,14 @@ class SilentMoonScreen extends StatelessWidget {
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     ElevatedButton(
-                      onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => CreateAccountScreen()));},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateAccountScreen(),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF6366F1),
                         padding: EdgeInsets.symmetric(vertical: 16),
@@ -120,21 +128,21 @@ class SilentMoonScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 16),
-
                     RichText(
                       text: TextSpan(
                         style: TextStyle(color: Colors.grey), // Default style
                         children: [
                           TextSpan(text: 'ALREADY HAVE AN ACCOUNT? '),
                           WidgetSpan(
-                            alignment:
-                                PlaceholderAlignment.middle, // Aligns with text
+                            alignment: PlaceholderAlignment.middle, // Aligns with text
                             child: TextButton(
                               onPressed: () {
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => LoginPage()));
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginPage(),
+                                  ),
+                                );
                               },
                               child: Text(
                                 'LOG IN',

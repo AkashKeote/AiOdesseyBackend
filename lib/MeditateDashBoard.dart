@@ -216,7 +216,7 @@ class Meditatedashboard extends StatelessWidget {
             color: Colors.blue,
             onPressed: () => Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Dashboard()),
+              MaterialPageRoute(builder: (context) =>  Dashboard()),
             ),
           ),
           
@@ -237,7 +237,7 @@ class Meditatedashboard extends StatelessWidget {
             color: Colors.grey,
             onPressed: () => Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Songscreen()),
+              MaterialPageRoute(builder: (context) => Songscreen()),
             ),
           ),
           

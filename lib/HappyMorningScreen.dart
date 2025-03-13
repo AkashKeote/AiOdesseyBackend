@@ -1,8 +1,23 @@
 import 'package:chatbot/DashBoard.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:just_audio/just_audio.dart';
 
-class HappyMorningScreen extends StatelessWidget {
+class HappyMorningScreen extends StatefulWidget {
   const HappyMorningScreen({super.key});
+
+  @override
+  _HappyMorningScreenState createState() => _HappyMorningScreenState();
+}
+
+class _HappyMorningScreenState extends State<HappyMorningScreen> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +114,7 @@ class HappyMorningScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildNarratorButtons(),
                     const SizedBox(height: 16),
-                    _buildAudioList(),
+                    _buildFirestoreAudioList(),
                   ],
                 ),
               ),
@@ -159,42 +174,64 @@ class HappyMorningScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAudioList() {
-    return Column(
-      children: [
-        _buildAudioItem('Focus Attention', '10 MIN'),
-        _buildAudioItem('Body Scan', '5 MIN'),
-        _buildAudioItem('Making Happiness', '3 MIN'),
-      ],
+  Widget _buildFirestoreAudioList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('songs')
+          .orderBy('order') // Optional: Order by a field
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+        if (!snapshot.hasData) return CircularProgressIndicator();
+
+        final songs = snapshot.data!.docs.map((doc) => Song.fromFirestore(doc)).toList();
+
+        return Column(
+          children: songs.map((song) => _buildAudioItem(song)).toList(),
+        );
+      },
     );
   }
 
-  Widget _buildAudioItem(String title, String duration) {
+  Widget _buildAudioItem(Song song) {
     return Column(
       children: [
         Row(
           children: [
-            const CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: Icon(Icons.play_arrow, color: Colors.white),
+            StreamBuilder<PlayerState>(
+              stream: _audioPlayer.playerStateStream,
+              builder: (context, snapshot) {
+                final isPlaying = snapshot.data?.playing ?? false;
+                final currentUrl = (_audioPlayer.audioSource as UriAudioSource?)?.uri.toString();
+
+                return IconButton(
+                  icon: Icon(
+                    (isPlaying && currentUrl == song.url)
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                    color: Colors.blue,
+                  ),
+                  onPressed: () {
+                    if (isPlaying && currentUrl == song.url) {
+                      _audioPlayer.pause();
+                    } else {
+                      _playSong(song.url);
+                    }
+                  },
+                );
+              },
             ),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+                  song.title,
+                  style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 Text(
-                  duration,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  song.duration,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -202,6 +239,44 @@ class HappyMorningScreen extends StatelessWidget {
         ),
         const Divider(height: 32),
       ],
+    );
+  }
+
+  void _playSong(String url) async {
+    try {
+      await _audioPlayer.stop(); // Stop the previous song
+      await _audioPlayer.setUrl(url);
+      await _audioPlayer.play();
+
+      // Update state to refresh UI
+      setState(() {});
+    } catch (e) {
+      print('Error playing song: $e');
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Could not play the song"),
+        ),
+      );
+    }
+  }
+}
+
+class Song {
+  final String title;
+  final String duration;
+  final String url;
+
+  Song({required this.title, required this.duration, required this.url});
+
+  factory Song.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Song(
+      title: data['title'] ?? 'No Title',
+      duration: data['duration'] ?? '0:00',
+      url: data['url'] ?? '',
     );
   }
 }
