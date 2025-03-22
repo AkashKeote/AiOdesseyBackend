@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:chatbot/FocusScreen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class GetStarted extends StatefulWidget {
   const GetStarted({super.key});
@@ -27,10 +27,8 @@ class _GetStartedState extends State<GetStarted> {
     try {
       final User? user = _auth.currentUser;
       if (user != null) {
-        DocumentSnapshot userData = await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        DocumentSnapshot userData =
+            await _firestore.collection('users').doc(user.uid).get();
 
         if (userData.exists) {
           setState(() {
@@ -66,13 +64,104 @@ class _GetStartedState extends State<GetStarted> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SizedBox(height: 80),
-                _buildAppLogo(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'S i l e n t ',
+                          style: TextStyle(
+                            fontFamily: 'airbnb',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: const Color.fromARGB(146, 255, 255, 255),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 30,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          ' M  o o n',
+                          style: TextStyle(
+                            fontFamily: 'airbnb',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: const Color.fromARGB(146, 255, 255, 255),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 SizedBox(height: 50),
                 _isLoading
                     ? CircularProgressIndicator(color: Colors.white)
-                    : _buildWelcomeMessage(),
+                    : Column(
+                        children: [
+                          Text(
+                            'Hi $_userName, Welcome',
+                            style: TextStyle(
+                              fontFamily: 'HelveticaMedium',
+                              fontSize: 35,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFFFECCC),
+                            ),
+                          ),
+                          Text(
+                            'to Silent Moon',
+                            style: TextStyle(
+                              fontFamily: 'HelveticaLight',
+                              fontSize: 35,
+                              color: Color(0xFFFFECCC),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                            child: Text(
+                              'Explore the app, Find some peace of mind to prepare for meditation.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'HelveticaLight',
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                 Spacer(),
-                _buildGetStartedButton(),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Focusscreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    'GET STARTED',
+                    style: TextStyle(
+                      fontFamily: 'HelveticaMedium',
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
                 SizedBox(height: 40),
               ],
             ),
@@ -92,98 +181,6 @@ class _GetStartedState extends State<GetStarted> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAppLogo() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Silent ',
-          style: TextStyle(
-            fontFamily: 'AirbnbCerealApp',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Image.asset(
-          'assets/images/logo.png',
-          height: 30,
-        ),
-        Text(
-          ' Moon',
-          style: TextStyle(
-            fontFamily: 'AirbnbCerealApp',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWelcomeMessage() {
-    return Column(
-      children: [
-        Text(
-          'Hi $_userName, Welcome',
-          style: TextStyle(
-            fontSize: 35,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          'to Silent Moon',
-          style: TextStyle(
-            fontSize: 35,
-            color: Colors.white,
-          ),
-        ),
-        SizedBox(height: 20),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30),
-          child: Text(
-            'Explore the app, Find some peace of mind to prepare for meditation.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGetStartedButton() {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Focusscreen(),
-          ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-      ),
-      child: Text(
-        'GET STARTED',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }

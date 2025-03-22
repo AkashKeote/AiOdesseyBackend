@@ -51,15 +51,17 @@ class SilentMoonScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 50), // Add top spacing
+                    SizedBox(height: 80),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Silent',
+                          'S i l e n t ',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontFamily: 'airbnb',
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            color: const Color.fromARGB(146, 0, 0, 0),
                           ),
                         ),
                         SizedBox(width: 8),
@@ -70,10 +72,12 @@ class SilentMoonScreen extends StatelessWidget {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Moon',
+                          ' M  o o n',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontFamily: 'airbnb',
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            color: const Color.fromARGB(146, 19, 0, 0),
                           ),
                         ),
                       ],
@@ -89,8 +93,8 @@ class SilentMoonScreen extends StatelessWidget {
                     Text(
                       'We are what we do',
                       style: TextStyle(
+                        fontFamily: 'HelveticaBold',
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 20),
@@ -98,18 +102,17 @@ class SilentMoonScreen extends StatelessWidget {
                       'Thousand of people are using Silent Moon for small meditations',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.grey,
+                        fontFamily: 'HelveticaLight',
+                        color: const Color.fromARGB(255, 134, 134, 134),
                       ),
                     ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CreateAccountScreen(),
-                          ),
-                        );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CreateAccountScreen()));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF6366F1),
@@ -122,31 +125,36 @@ class SilentMoonScreen extends StatelessWidget {
                       child: Text(
                         'SIGN UP',
                         style: TextStyle(
+                          fontFamily: 'HelveticaMedium',
                           fontSize: 18,
                           color: Colors.white,
                         ),
                       ),
                     ),
                     SizedBox(height: 16),
+
                     RichText(
                       text: TextSpan(
-                        style: TextStyle(color: Colors.grey), // Default style
+                        style: TextStyle(
+                            color: Colors.grey,
+                            fontFamily: 'HelveticaMedium'), // Default style
                         children: [
                           TextSpan(text: 'ALREADY HAVE AN ACCOUNT? '),
                           WidgetSpan(
-                            alignment: PlaceholderAlignment.middle, // Aligns with text
+                            alignment:
+                                PlaceholderAlignment.middle, // Aligns with text
                             child: TextButton(
                               onPressed: () {
                                 Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => LoginPage(),
-                                  ),
-                                );
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => LoginPage()));
                               },
                               child: Text(
                                 'LOG IN',
-                                style: TextStyle(color: Color(0xFF6366F1)),
+                                style: TextStyle(
+                                    color: Color(0xFF6366F1),
+                                    fontFamily: 'HelveticaMedium'),
                               ),
                             ),
                           ),

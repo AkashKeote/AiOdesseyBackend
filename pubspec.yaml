@@ -23,7 +23,8 @@ dependencies:
   cached_network_image: ^3.4.1
   just_audio: ^0.9.18  
   audioplayers: ^6.4.0
-
+  intl: ^0.20.2
+  firebase_storage: ^12.4.4
 
 dev_dependencies:
   flutter_test:
@@ -36,6 +37,33 @@ flutter:
     - assets/images/Group.png
     - assets/images/logo.png
     - assets/images/Frame.png
+    - assets/images/google.png
     - assets/images/
     - assets/songs/
     - assets/songs/blinding_lights.mp3
+
+  fonts:
+    - family: HelveticaNeue
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueBlack.otf
+    - family: HelveticaLight
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueLight.otf
+    - family: HelveticaBold
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueBold.otf
+    - family: HelveticaHeavy
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueHeavy.otf  
+    - family: HelveticaThin
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueThin.otf
+    - family: HelveticaMedium
+      fonts:
+        - asset: assets/fonts/helvetica-neue-5/HelveticaNeueMedium.otf
+    - family: meteora
+      fonts:
+        - asset: assets/fonts/meteora-demo/Meteora - DEMO.ttf
+    - family: airbnb
+      fonts:
+        - asset: assets/fonts/Airbnb Cereal-fontiko/Airbnb Cereal-fontiko/AirbnbCereal_W_Lt.otf

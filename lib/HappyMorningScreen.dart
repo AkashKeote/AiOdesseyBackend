@@ -1,7 +1,6 @@
+import 'package:audioplayers/audioplayers.dart'; // Add this import
 import 'package:chatbot/DashBoard.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:just_audio/just_audio.dart';
 
 class HappyMorningScreen extends StatefulWidget {
   const HappyMorningScreen({super.key});
@@ -11,11 +10,36 @@ class HappyMorningScreen extends StatefulWidget {
 }
 
 class _HappyMorningScreenState extends State<HappyMorningScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer()
+    ..setReleaseMode(ReleaseMode.loop);
+  bool isPlaying = false; // Track play/pause state
+  String? currentUrl; // Track the current playing URL
+
+  void togglePlayPause(String url) async {
+    if (isPlaying && currentUrl == url) {
+      await _audioPlayer.pause();
+      print("Paused");
+    } else {
+      try {
+        await _audioPlayer.setVolume(1.0); // Ensure volume is full
+        await _audioPlayer.play(
+          UrlSource(url),
+          mode: PlayerMode.mediaPlayer, // Ensure media player mode
+        );
+        print("Playing...");
+      } catch (e) {
+        print("❌ Audio Player Error: $e");
+      }
+    }
+    setState(() {
+      isPlaying = !isPlaying;
+      currentUrl = url;
+    });
+  }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    _audioPlayer.dispose(); // Clean up resources
     super.dispose();
   }
 
@@ -48,7 +72,8 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
                 shape: const CircleBorder(),
                 backgroundColor: Colors.white.withOpacity(0.5),
               ),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=>Dashboard())),
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => Dashboard())),
               child: const Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
@@ -81,6 +106,7 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
                     const Text(
                       'Happy Morning',
                       style: TextStyle(
+                        fontFamily: 'airbnb',
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -89,16 +115,19 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
                     Text(
                       'COURSE',
                       style: TextStyle(
+                        fontFamily: 'HelveticaLight',
                         fontSize: 14,
-                        color: Colors.grey[500],
+                        color: const Color.fromARGB(255, 122, 116, 116),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Ease the mind into a restful night’s sleep with these deep, ambient tones.',
                       style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'HelveticaLight',
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: const Color.fromARGB(136, 95, 91, 91),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -107,14 +136,15 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
                     const Text(
                       'Pick a Narrator',
                       style: TextStyle(
+                        fontFamily: 'HelveticaMedium',
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(151, 0, 0, 0),
                       ),
                     ),
                     const SizedBox(height: 8),
                     _buildNarratorButtons(),
                     const SizedBox(height: 16),
-                    _buildFirestoreAudioList(),
+                    _buildAudioList(),
                   ],
                 ),
               ),
@@ -135,6 +165,8 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
       child: Icon(icon, color: Colors.white),
     );
   }
+  
+
 
   Widget _buildStatsRow() {
     return Row(
@@ -158,6 +190,7 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
           child: const Text(
             'MALE VOICE',
             style: TextStyle(
+              fontFamily: 'HelveticaMedium',
               color: Colors.blue,
               decoration: TextDecoration.underline,
             ),
@@ -167,71 +200,64 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
           onPressed: () {},
           child: Text(
             'FEMALE VOICE',
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(
+                color: Colors.grey[600], fontFamily: 'HelveticaMedium'),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFirestoreAudioList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('songs')
-          .orderBy('order') // Optional: Order by a field
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) return Text('Error: ${snapshot.error}');
-        if (!snapshot.hasData) return CircularProgressIndicator();
-
-        final songs = snapshot.data!.docs.map((doc) => Song.fromFirestore(doc)).toList();
-
-        return Column(
-          children: songs.map((song) => _buildAudioItem(song)).toList(),
-        );
-      },
+  Widget _buildAudioList() {
+    return Column(
+      children: [
+        _buildAudioItem(
+            'Focus Attention', '10 MIN', 'https://drive.google.com/uc?export=download&id=1uMMJvIi6LCyrtUaUjWgkdB1w9nbRvfxg'),
+        _buildAudioItem('Body Scan', '5 MIN', 'https://drive.google.com/uc?export=download&id=1t2ZOeB0ES_MqYx6qPGMmwOkjmLM5_1Xu'),
+        _buildAudioItem(
+            'Making Happiness', '3 MIN', 'https://drive.google.com/uc?export=download&id=1LzjsvIr57lnnKpNgNkDz-OD2-G4eno5-'),
+           
+      ],
     );
   }
 
-  Widget _buildAudioItem(Song song) {
+  Widget _buildAudioItem(String title, String duration, String url) {
     return Column(
       children: [
         Row(
           children: [
-            StreamBuilder<PlayerState>(
-              stream: _audioPlayer.playerStateStream,
-              builder: (context, snapshot) {
-                final isPlaying = snapshot.data?.playing ?? false;
-                final currentUrl = (_audioPlayer.audioSource as UriAudioSource?)?.uri.toString();
-
-                return IconButton(
-                  icon: Icon(
-                    (isPlaying && currentUrl == song.url)
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                    color: Colors.blue,
-                  ),
-                  onPressed: () {
-                    if (isPlaying && currentUrl == song.url) {
-                      _audioPlayer.pause();
-                    } else {
-                      _playSong(song.url);
-                    }
-                  },
-                );
-              },
+            CircleAvatar(
+              backgroundColor: Color(0xFF8E97FD),
+              child: IconButton(
+                icon: Icon(
+                    isPlaying && currentUrl == url
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.white),
+                onPressed: () => togglePlayPause(url),
+                iconSize: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  song.title,
-                  style: TextStyle(fontSize: 16, color: Colors.black),
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontFamily: 'HelveticaMedium',
+                  ),
                 ),
                 Text(
-                  song.duration,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  duration,
+                  style: TextStyle(
+                    fontFamily: 'HelveticaLight',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                  ),
                 ),
               ],
             ),
@@ -241,42 +267,5 @@ class _HappyMorningScreenState extends State<HappyMorningScreen> {
       ],
     );
   }
-
-  void _playSong(String url) async {
-    try {
-      await _audioPlayer.stop(); // Stop the previous song
-      await _audioPlayer.setUrl(url);
-      await _audioPlayer.play();
-
-      // Update state to refresh UI
-      setState(() {});
-    } catch (e) {
-      print('Error playing song: $e');
-      // Show error dialog
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text("Error"),
-          content: Text("Could not play the song"),
-        ),
-      );
-    }
-  }
-}
-
-class Song {
-  final String title;
-  final String duration;
-  final String url;
-
-  Song({required this.title, required this.duration, required this.url});
-
-  factory Song.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Song(
-      title: data['title'] ?? 'No Title',
-      duration: data['duration'] ?? '0:00',
-      url: data['url'] ?? '',
-    );
-  }
+  
 }
